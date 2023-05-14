@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PokemonTutorial.Dto;
 using PokemonTutorial.Interfaces;
 using PokemonTutorial.Models;
+using PokemonTutorial.Repository;
 
 namespace PokemonTutorial.Controllers
 {
@@ -61,6 +62,35 @@ namespace PokemonTutorial.Controllers
                 return BadRequest(ModelState);
 
             return Ok(reviews);
+        }
+
+        public IActionResult CreateReviewer([FromBody] ReviewerDto reviewerCreate)
+        {
+            if (reviewerCreate == null)
+                return BadRequest(ModelState);
+
+            var reviewer = _reviewerRepository.GetReviewers()
+                .Where(c => c.FirstName.Trim().ToUpper() == reviewerCreate.FirstName.ToUpper())
+                .FirstOrDefault();
+
+            if (reviewer != null)
+            {
+                ModelState.AddModelError("", "Reviewer Already exists");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var reviewerMap = _mapper.Map<Reviewer>(reviewerCreate);
+
+            if (!_reviewerRepository.CreateReview(reviewerMap))
+            {
+                ModelState.AddModelError("", "Something went wronmg while saving");
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok(reviewerMap);
         }
     }
 }

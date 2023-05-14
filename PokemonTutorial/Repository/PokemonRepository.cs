@@ -12,6 +12,31 @@ namespace PokemonTutorial.Repository
             this._context = context;
         }
 
+        public bool CreatePokemon(int ownerID, int categoryID, Pokemon pokemon)
+        {
+            var pokemonOwnerEntity = _context.Owners.Where(a => a.ID == ownerID).FirstOrDefault();
+            var category = _context.Categories.Where(c => c.ID == categoryID).FirstOrDefault();
+
+            var pokemonOwner = new PokemonOwner()
+            {
+                Owner = pokemonOwnerEntity,
+                Pokemon = pokemon
+            };
+
+            _context.Add(pokemonOwner);
+
+            var pokemonCategory = new PokemonCategory()
+            {
+                Category = category,
+                Pokemon = pokemon
+            };
+
+            _context.Add(pokemonCategory);
+            _context.Add(pokemon);
+
+            return Save();
+        }
+
         public Pokemon GetPokemon(int pokeId)
         {
             return _context.Pokemon.Where(p => p.ID == pokeId).FirstOrDefault();
@@ -40,6 +65,13 @@ namespace PokemonTutorial.Repository
         public bool PokemonExist(int id)
         {
             return _context.Pokemon.Any(p => p.ID == id);
+        }
+
+        public bool Save()
+        {
+            var saved = _context.SaveChanges();
+            
+            return saved > 0 ?true : false;
         }
     }
 }
